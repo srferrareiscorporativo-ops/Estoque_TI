@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Sistema de Estoque TI</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="css/all.min.css">
+    <link href="css/styles.css" rel="stylesheet">
+    
+
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="config.js"></script>  <!-- ✅ carrega as configs -->
+    <script type="module" src="app.js"></script>    <!-- ✅ pode usar window.CONFIG -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<script type="text/javascript">
+  (function(){
+    emailjs.init({
+      publicKey: "nRABfso2u5UuC-ErS" // ⚠️ substitua pela sua chave pública do EmailJS
+    });
+  })();
+</script>
+</head>
+<body class="bg-gray-50">
+    
+    <script>
+  (() => {
+    const encodedUser = "YWRtaW4=";
+    const encodedPass = "MTIzIUAjQXM=";
+
+    function decodeBase64(str) {
+      try {
+        return atob(str);
+      } catch {
+        return null;
+      }
+    }
+
+    const correctUser = decodeBase64(encodedUser);
+    const correctPass = decodeBase64(encodedPass);
+
+    // Checa se há login válido no sessionStorage
+    const loggedUser = sessionStorage.getItem('loggedUser');
+    if (loggedUser !== correctUser) {
+      // Não logado, redireciona para login
+      window.location.href = 'login.html'; // Ajuste para o caminho correto do seu login
+    }
+  })();
+</script>
+
+
+     <header class="md:hidden bg-white shadow-sm border-b px-4 py-3 flex items-center justify-between">
+    <button id="btn-toggle-sidebar" class="text-gray-500 focus:outline-none">
+      <i class="fas fa-bars text-xl"></i>
+    </button>
+    <h1 class="text-lg font-semibold text-gray-800">Sistema de Estoque TI</h1>
+    <div class="w-6"></div>
+  </header>
+
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+ 
+    <aside id="sidebar" class="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-40
+         transform -translate-x-full transition-transform duration-300 ease-in-out
+         md:translate-x-0 md:relative md:transform-none">
+
+      <div class="p-6 border-b border-gray-200">
+        <h1 class="text-xl font-semibold text-gray-800 flex items-center">
+          <i class="fas fa-box text-blue-600 mr-3"></i>
+          Organiza TI
+        </h1>
+      </div>
+
+      <nav class="mt-6">
+        <div class="px-6 mb-4">
+          <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">MENU PRINCIPAL</p>
+        </div>
+        <ul class="space-y-1 px-3">
+          <li><a href="#dashboard" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors active"><i class="fas fa-chart-bar w-5 h-5 mr-3"></i>Dashboard</a></li>
+          <li><a href="#envios-filiais" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"><i class="fas fa-truck w-5 h-5 mr-3"></i>Controle de Envios para Filiais</a></li>
+          <li><a href="#produtos" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"><i class="fas fa-box w-5 h-5 mr-3"></i>Produtos</a></li>
+          <li><a href="#movimentacoes" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"><i class="fas fa-exchange-alt w-5 h-5 mr-3"></i>Movimentações</a></li>
+          <li><a href="#historico" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"><i class="fas fa-history w-5 h-5 mr-3"></i>Histórico</a></li>
+          <li><a href="#relatorios" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"><i class="fas fa-file-alt w-5 h-5 mr-3"></i>Relatórios</a></li>
+        </ul>
+      </nav>
+<footer class="mt-12 border-t pt-4 text-center text-xs text-gray-400">
+  © 2025 Desenvolvido por <span class="text-gray-600 font-medium">Samuel Ruske Ferrareis</span>. Todos os direitos reservados.
+</footer>
+    </aside>
+
+        <!-- Main content -->
+        <div class="flex-1 overflow-auto flex flex-col md:ml-64">
+            <!-- Dashboard -->
+            <div id="dashboard" class="page active">
+  <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+    <div>
+      <h2 class="text-2xl font-semibold text-gray-800">Dashboard</h2>
+      <p class="text-sm text-gray-600 mt-1">Visão geral do estoque da sala de TI</p>
+    </div>
+  </header>
+
+  <main class="p-6">
+    <!-- Cards principais -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+      <div class="bg-white p-6 rounded-lg shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Total de Produtos</p>
+            <p class="text-2xl font-semibold text-gray-800 mt-1" id="total-produtos">0</p>
+          </div>
+          <div class="bg-blue-100 p-3 rounded-lg">
+            <i class="fas fa-box text-blue-600 text-xl"></i>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Estoque Baixo</p>
+            <p class="text-2xl font-semibold text-yellow-600 mt-1" id="estoque-baixo">0</p>
+          </div>
+          <div class="bg-yellow-100 p-3 rounded-lg">
+            <i class="fas fa-exclamation-triangle text-yellow-600 text-xl"></i>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white p-6 rounded-lg shadow">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-sm font-medium text-gray-600">Movimentações Hoje</p>
+            <p class="text-2xl font-semibold text-green-600 mt-1" id="movimentacoes-hoje">0</p>
+          </div>
+          <div class="bg-green-100 p-3 rounded-lg">
+            <i class="fas fa-exchange-alt text-green-600 text-xl"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cards de Top5 -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-sm font-semibold">Top 5 Mais Movimentados</h3>
+        <div id="top-movimentados" class="mt-2 space-y-1 text-sm"></div>
+      </div>
+
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-sm font-semibold">Envios por Filial</h3>
+        <div id="envios-por-filial" class="mt-2 space-y-1 text-sm"></div>
+      </div>
+
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-sm font-semibold">Saldo por Categoria</h3>
+        <div id="saldo-categoria" class="mt-2 space-y-1 text-sm"></div>
+      </div>
+
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-sm font-semibold">Produtos Zerados</h3>
+        <div id="produtos-zerados" class="mt-2 text-sm"></div>
+      </div>
+    </div>
+
+    <!-- Lista Simplificada -->
+    <div class="bg-white mt-6 rounded-lg shadow">
+      <div class="px-6 py-4 border-b">
+        <h3 class="text-lg font-semibold">Saldo Estoque</h3>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-2 text-left">Produto</th>
+              <th class="px-6 py-2 text-left">Quantidade</th>
+            </tr>
+          </thead>
+          <tbody id="lista-simplificada" class="divide-y divide-gray-200"></tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+</div>
+
+
+              <!-- Controle de Envios para Filiais -->
+            <div id="envios-filiais" class="page">
+            <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+                <h2 class="text-2xl font-semibold text-gray-800">Controle de Envios para Filiais</h2>
+                <p class="text-sm text-gray-600 mt-1">Gerencie e visualize os envios para cada filial</p>
+            </header>
+
+            <main class="p-6">
+                <!-- Grid de Filiais -->
+                <div id="grid-filiais" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-8 gap-4"></div>
+
+                <!-- Tela de Detalhes -->
+                <div id="detalhes-filial" class="hidden flex flex-col gap-4">
+                <div class="flex justify-between items-center">
+                    <h3 id="nome-filial" class="text-xl font-bold"></h3>
+                    <button id="btn-voltar-filiais" class="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">Voltar</button>
+                </div>
+            
+
+                <!-- Lista de Envios -->
+                <div id="lista-envios-filial" class="flex flex-wrap gap-4"></div>
+                </div>
+            </main>
+            </div>
+
+            <!-- Produtos -->
+            <div id="produtos" class="page">
+                <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-semibold text-gray-800">Produtos</h2>
+                            <p class="text-sm text-gray-600 mt-1">Gerencie o estoque da sala de TI</p>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <div class="relative w-full sm:w-auto">
+                                <input type="text" id="search-produtos" placeholder="Buscar produtos..." class="w-full sm:w-80 pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <i class="fas fa-search absolute left-3 top-3 text-gray-400"></i>
+                            </div>
+                            
+                            <button id="btn-novo-produto" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-plus mr-2"></i>
+                                Novo Produto
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <main class="p-6">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-semibold text-gray-800">Lista de Produtos</h3>
+                        </div>
+                    
+
+                        <div class="overflow-x-auto w-full">
+                            <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produto</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Código</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantidade</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mínimo</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="produtos-table-body" class="bg-white divide-y divide-gray-200">
+                                    
+                                </tbody>
+                            </table>
+                        </div>
+
+
+                    </div>
+                </main>
+            </div>
+
+            <!-- Movimentações -->
+            <div id="movimentacoes" class="page">
+                <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-semibold text-gray-800">Movimentações</h2>
+                            <p class="text-sm text-gray-600 mt-1">Registre entradas e saídas de produtos</p>
+                        </div>
+                        
+                        <button id="btn-nova-movimentacao" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center">
+                            <i class="fas fa-plus mr-2"></i>
+                            Nova Movimentação
+                        </button>
+                    </div>
+                </header>
+
+                <main class="p-6">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-semibold text-gray-800">Movimentações Recentes</h3>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                        <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Produto</th>
+                                        <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                        <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Quantidade</th>
+                                        <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Responsável</th>
+                                        <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Solicitante</th>
+                                        <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Chamado</th>
+                                        <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Setor</th>
+                                        <th class="px-2 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody id="movimentacoes-table-body" class="bg-white divide-y divide-gray-200">
+                                    <!-- Movimentações serão inseridas aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </main>
+            </div>
+
+            <!-- Histórico -->
+            <div id="historico" class="page">
+                <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+                    <div>
+                        <h2 class="text-2xl font-semibold text-gray-800">Histórico</h2>
+                        <p class="text-sm text-gray-600 mt-1">Histórico completo de movimentações</p>
+                    </div>
+                </header>
+
+                <main class="p-6">
+                    <div class="bg-white rounded-lg shadow">
+                        <div class="px-6 py-4 border-b border-gray-200">
+                            <h3 class="text-lg font-semibold text-gray-800">Histórico de Movimentações</h3>
+                        </div>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full divide-y divide-gray-200">
+                                <thead class="bg-gray-50">
+                                    <tr>
+                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produto</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Quantidade</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Responsável</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Solicitante</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Chamado</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Setor</th>
+                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="historico-table-body" class="bg-white divide-y divide-gray-200">
+                                    <!-- Histórico será inserido aqui -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </main>
+            </div>
+
+            <!-- Relatórios -->
+            <div id="relatorios" class="page">
+                <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                        <div>
+                            <h2 class="text-2xl font-semibold text-gray-800">Relatórios</h2>
+                            <p class="text-sm text-gray-600 mt-1">Análises e estatísticas do estoque</p>
+                        </div>
+                        
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                            <select id="tipo-relatorio" class="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="estoque">Relatório de Estoque</option>
+                                <option value="historico">Histórico</option>
+                                <option value="movimentacoes">Relatório de Movimentações</option>
+                                <option value="categorias">Relatório por Categorias</option>
+                            </select>
+                            
+                            <button id="btn-exportar-relatorio" class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center">
+                                <i class="fas fa-download mr-2"></i>
+                                Exportar
+                            </button>
+                        </div>
+                    </div>
+                </header>
+
+                <main class="p-6">
+                    <div id="relatorio-content">
+                        <!-- Conteúdo do relatório será inserido aqui -->
+                    </div>
+                </main>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Modals -->
+    <!-- Modal Produto -->
+    <div id="modal-produto" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <div class="bg-white rounded-lg p-4 w-full max-w-full sm:max-w-md mx-2">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-produto-title" class="text-lg font-semibold">Novo Produto</h3>
+                <button id="close-modal-produto" class="text-gray-500 hover:text-gray-700">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="form-produto" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Nome do Produto</label>
+                    <input type="text" id="produto-nome" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+                </div>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Quantidade</label>
+                        <input type="number" id="produto-quantidade" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" min="0" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Mínimo</label>
+                        <input type="number" id="produto-minimo" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" min="0" required>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Categoria</label>
+                    <select id="produto-categoria" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        <option value="">Selecione uma categoria</option>
+                        <option value="Computadores">Computadores</option>
+                        <option value="Notebooks">Notebooks</option>
+                        <option value="Perifericos">Periféricos</option>
+                        <option value="Monitores">Monitores</option>
+                        <option value="Redes">Redes</option>
+                        <option value="Celulares">Celulares</option>
+                        <option value="Armazenamento">Armazenamento</option>
+                        <option value="Impressoras">Impressoras</option>
+                        <option value="Outros">Outros</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Descrição</label>
+                    <textarea id="produto-descricao" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" rows="3"></textarea>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-1 gap-4">
+                <div class="flex items-center space-x-3">
+                    <input type="checkbox" id="produto-notificar" class="h-4 w-4 text-blue-600 border-gray-300 rounded">
+                    <label for="produto-notificar" class="text-sm text-gray-700">Notificar por e-mail se estoque ficar baixo/zerar</label>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">E-mail de notificação</label>
+                    <input type="email" id="produto-email" placeholder="email@exemplo.com" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                    <p class="text-xs text-gray-500 mt-1">Preencha apenas se quiser que o sistema envie avisos para este produto.</p>
+                </div>
+                </div>
+                
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button type="button" id="cancel-produto" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">
+                        Cancelar
+                    </button>
+                    <button type="submit" id="btn-salvar-movimentacao" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    
+    <!-- Modal Movimentação -->
+    <div id="modal-movimentacao" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center z-50">
+        <!-- Substitua o interior do modal-movimentacao por isto -->
+<div class="bg-white rounded-lg p-4 w-full max-w-full sm:max-w-md mx-2 max-h-[85vh] flex flex-col">
+  <div class="flex justify-between items-center mb-4">
+    <h3 class="text-lg font-semibold">Nova Movimentação</h3>
+    <button id="close-modal-movimentacao" class="text-gray-500 hover:text-gray-700">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
+
+  <!-- Conteúdo rolável -->
+  <div class="overflow-auto pr-2" style="max-height: calc(85vh - 88px);">
+    <form id="form-movimentacao" class="space-y-4">
+      <!-- Produto -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Produto</label>
+        <select id="movimentacao-produto" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500" required>
+          <option value="">Selecione um produto</option>
+        </select>
+      </div>
+
+      <!-- Tipo / Quantidade -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+          <select id="movimentacao-tipo" class="w-full border border-gray-300 rounded-lg px-3 py-2" required>
+            <option value="">Selecione o tipo</option>
+            <option value="entrada">Entrada</option>
+            <option value="saida">Saída</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Quantidade</label>
+          <input type="number" id="movimentacao-quantidade" min="1" class="w-full border border-gray-300 rounded-lg px-3 py-2" required>
+        </div>
+      </div>
+
+      <!-- Responsável, Chamado, Solicitante, Setor -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Responsável</label>
+        <input type="text" id="movimentacao-responsavel" class="w-full border border-gray-300 rounded-lg px-3 py-2" required>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Número do Chamado</label>
+        <input type="text" id="movimentacao-chamado" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Solicitante</label>
+        <input type="text" id="movimentacao-solicitante" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Setor</label>
+        <input type="text" id="movimentacao-setor" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+      </div>
+
+      <!-- Posto / Filial -->
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Destino</label>
+        <select id="movimentacao-filial" class="w-full border border-gray-300 rounded-lg px-3 py-2">
+          <option value="">Nenhum (movimentação local)</option>
+        </select>
+      </div>
+
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">Observações</label>
+        <textarea id="movimentacao-observacoes" class="w-full border border-gray-300 rounded-lg px-3 py-2" rows="3"></textarea>
+      </div>
+    </form>
+  </div>
+
+  <!-- Botões fixos / sticky -->
+  <div class="mt-3 sticky bottom-0 bg-white pt-3 -mx-4 px-4 border-t">
+    <div class="flex justify-end gap-3">
+      <button id="cancel-movimentacao" class="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50">Cancelar</button>
+      <button id="btn-submit-movimentacao" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">Registrar</button>
+    </div>
+  </div>
+</div>
+
+    </div>
+
+    <!-- Toast notification -->
+    <div id="toast" class="fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg hidden z-50">
+        <div id="toast-message"></div>
+    </div>
+
+   <script>
+  const btn = document.getElementById('btn-toggle-sidebar');
+  const sidebar = document.getElementById('sidebar');
+
+  // Aparecer e desaparecer no clique
+  btn.addEventListener('click', () => {
+    if (window.innerWidth < 768) {
+      sidebar.classList.toggle('-translate-x-full');
+    }
+  });
+
+ 
+  document.querySelectorAll('#sidebar .nav-link').forEach(link => {
+  link.addEventListener('click', (e) => {
+    e.preventDefault();
+
+    if (window.innerWidth < 768) {
+      sidebar.classList.add('-translate-x-full');
+    }
+
+    const targetId = link.getAttribute('href').substring(1);
+
+    // Se a app já foi inicializada, use a função da app (mantém carregamentos corretos)
+    if (window.app && typeof window.app.showPage === 'function') {
+      window.app.showPage(targetId);
+      // scrollear para topo da area principal
+      window.scrollTo(0, 0);
+      return;
+    }
+
+    // fallback: se app ainda não inicializou, apenas troca a classe active
+    document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+    const targetPage = document.getElementById(targetId);
+    if (targetPage) targetPage.classList.add('active');
+  });
+});
+
+
+</script>
+  
+</body>
+</html>

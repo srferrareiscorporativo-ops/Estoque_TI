@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Login Estoque TI</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="css/styles.css" rel="stylesheet">
+  
+
+
+</head>
+<body class="min-h-screen flex items-center justify-center bg-gray-100">
+  <div class="bg-white shadow-lg rounded-lg w-full">
+
+    <div class="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 flex items-center justify-center px-4">
+  <form id="login-form" class="bg-white rounded-2xl shadow-2xl p-10 w-full max-w-xl space-y-6 transition-all">
+    <div class="text-center">
+      <h2 class="text-3xl font-bold text-gray-800">Bem-vindo de volta</h2>
+      <p class="text-gray-500 text-sm mt-1">Acesse sua conta com seus dados</p>
+    </div>
+
+    <div>
+      <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Usuário</label>
+      <div class="relative">
+        <input
+          type="text"
+          name="username"
+          id="username"
+          placeholder="Digite seu usuário"
+          class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-800 placeholder-gray-400 transition"
+          required
+        />
+        <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <path d="M20 21v-2a4 4 0 00-3-3.87M4 21v-2a4 4 0 013-3.87M16 3.13a4 4 0 010 7.75M8 3.13a4 4 0 000 7.75" />
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Senha</label>
+      <div class="relative">
+        <input
+          type="password"
+          name="password"
+          id="password"
+          placeholder="••••••••"
+          class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-gray-800 placeholder-gray-400 transition"
+          required
+        />
+        <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400">
+          <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" viewBox="0 0 24 24">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+            <path d="M7 11V7a5 5 0 0110 0v4"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <button
+      type="submit"
+      class="w-full py-3 bg-blue-600 text-white text-base font-medium rounded-lg hover:bg-blue-700 transition duration-200 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1"
+    >
+      Entrar
+    </button>
+     <div id="form-error" class="hidden text-red-600 text-sm text-center font-medium">
+
+</div>
+<footer class="mt-12 border-t pt-4 text-center text-xs text-gray-400">
+  © 2025 Desenvolvido por <span class="text-gray-600 font-medium">Samuel Ruske Ferrareis</span>. Todos os direitos reservados.
+</footer>
+  </form>
+</div>
+
+  <script>
+    (() => {
+
+      const encodedUser = "YWRtaW4=";
+      const encodedPass = "MTIzIUAjQXM=";
+
+      function decodeBase64(str) {
+        try {
+          return atob(str);
+        } catch {
+          return null;
+        }
+      }
+
+      const correctUser = decodeBase64(encodedUser);
+      const correctPass = decodeBase64(encodedPass);
+
+      const form = document.getElementById("login-form");
+      const errorMsg = document.getElementById("form-error");
+
+      form.addEventListener("submit", (e) => {
+        e.preventDefault();
+        errorMsg.classList.add("hidden");
+        const username = form.username.value.trim();
+        const password = form.password.value;
+
+        if (username === correctUser && password === correctPass) {
+        sessionStorage.setItem('loggedUser', correctUser);
+          window.location.href = "index.html";
+        } else {
+          errorMsg.textContent = "Usuário ou senha incorretos.";
+          errorMsg.classList.remove("hidden");
+          errorMsg.classList.add("animate-pulse");
+
+        }
+      });
+    })();
+  </script>
+</body>
+</html>
