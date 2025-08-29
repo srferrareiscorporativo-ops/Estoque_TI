@@ -1,7 +1,18 @@
 {
+  "name": "sistema-estoque-ti",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
   "dependencies": {
     "@tailwindcss/cli": "^4.1.11",
     "@tailwindcss/vite": "^4.1.11",
     "tailwindcss": "^4.1.11"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
   }
 }

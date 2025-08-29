@@ -1,12 +1,16 @@
 window.CONFIG = {
-    SUPABASE_URL: 'http://192.168.2.100:54321',
-    SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS1kZW1vIiwicm9sZSI6ImFub24iLCJleHAiOjE5ODM4MTI5OTZ9.CRXP1A7WOeoJeXxjNni43kdQwgnWNReilDMblYTn_I0', // sua chave real aqui
+    // Using Replit's built-in database - will need to be configured via Supabase or alternative
+    SUPABASE_URL: 'https://your-project.supabase.co', // You'll need to set up your own Supabase project
+    SUPABASE_ANON_KEY: 'your-anon-key-here', // Your actual Supabase anon key
     EMAIL_WEBHOOK_URL: 'nRABfso2u5UuC-ErS',
 
     APP_NAME: 'Sistema de Estoque TI',
     VERSION: '1.0.0',
     
-    // Outras configurações úteis
+    // Database configuration
+    DATABASE_URL: 'postgresql://postgres:password@helium/heliumdb?sslmode=disable',
+    
+    // Table names
     TABLES: {
         PRODUTOS: 'produtos',
         MOVIMENTACOES: 'movimentacoes',
