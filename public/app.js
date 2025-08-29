@@ -207,7 +207,7 @@ todayMovements: hojeMovs.length
 this.updateDashboard?.();
 this.updateProductsTable?.();
 this.updateMovementsTable?.();
-this.updateHistoryTable?.();
+/*this.updateHistoryTable?.();*/
 this.updateProductSelect?.();
 } catch (error) {
 console.error('Erro ao carregar dados:', error);
