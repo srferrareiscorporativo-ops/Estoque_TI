@@ -81,7 +81,6 @@
           <li><a href="#envios-filiais" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"><i class="fas fa-truck w-5 h-5 mr-3"></i>Controle de Envios para Filiais</a></li>
           <li><a href="#produtos" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"><i class="fas fa-box w-5 h-5 mr-3"></i>Produtos</a></li>
           <li><a href="#movimentacoes" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"><i class="fas fa-exchange-alt w-5 h-5 mr-3"></i>Movimentações</a></li>
-          <li><a href="#historico" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"><i class="fas fa-history w-5 h-5 mr-3"></i>Histórico</a></li>
           <li><a href="#relatorios" class="nav-link flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors"><i class="fas fa-file-alt w-5 h-5 mr-3"></i>Relatórios</a></li>
         </ul>
       </nav>
@@ -140,7 +139,7 @@
     </div>
 
     <!-- Cards de Top5 -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
       <div class="bg-white p-4 rounded-lg shadow">
         <h3 class="text-sm font-semibold">Top 5 Mais Movimentados</h3>
         <div id="top-movimentados" class="mt-2 space-y-1 text-sm"></div>
@@ -159,6 +158,27 @@
       <div class="bg-white p-4 rounded-lg shadow">
         <h3 class="text-sm font-semibold">Produtos Zerados</h3>
         <div id="produtos-zerados" class="mt-2 text-sm"></div>
+      </div>
+    </div>
+
+    <!-- Novos Cards Solicitados -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-sm font-semibold">Top 5 Usuários</h3>
+        <p class="text-xs text-gray-500 mb-2">Quem mais pede equipamentos</p>
+        <div id="top-usuarios" class="mt-2 space-y-1 text-sm"></div>
+      </div>
+
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-sm font-semibold">Top 5 Setores</h3>
+        <p class="text-xs text-gray-500 mb-2">Setores que mais recebem equipamentos</p>
+        <div id="top-setores" class="mt-2 space-y-1 text-sm"></div>
+      </div>
+
+      <div class="bg-white p-4 rounded-lg shadow">
+        <h3 class="text-sm font-semibold">Top 5 Filiais</h3>
+        <p class="text-xs text-gray-500 mb-2">Filiais que mais pedem equipamentos</p>
+        <div id="top-filiais" class="mt-2 space-y-1 text-sm"></div>
       </div>
     </div>
 
@@ -307,43 +327,6 @@
                 </main>
             </div>
 
-            <!-- Histórico -->
-            <div id="historico" class="page">
-                <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
-                    <div>
-                        <h2 class="text-2xl font-semibold text-gray-800">Histórico</h2>
-                        <p class="text-sm text-gray-600 mt-1">Histórico completo de movimentações</p>
-                    </div>
-                </header>
-
-                <main class="p-6">
-                    <div class="bg-white rounded-lg shadow">
-                        <div class="px-6 py-4 border-b border-gray-200">
-                            <h3 class="text-lg font-semibold text-gray-800">Histórico de Movimentações</h3>
-                        </div>
-                        
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Produto</th>
-                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Tipo</th>
-                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Quantidade</th>
-                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Responsável</th>
-                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Solicitante</th>
-                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Chamado</th>
-                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Setor</th>
-                                        <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Data</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="historico-table-body" class="bg-white divide-y divide-gray-200">
-                                    <!-- Histórico será inserido aqui -->
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </main>
-            </div>
 
             <!-- Relatórios -->
             <div id="relatorios" class="page">

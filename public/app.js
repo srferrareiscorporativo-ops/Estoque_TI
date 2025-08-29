@@ -119,10 +119,7 @@ setupEventListeners() {
     const btnVoltar = document.getElementById('btn-voltar-filiais');
     if (btnVoltar) {
         btnVoltar.addEventListener('click', () => {
-            const grid = document.getElementById('grid-filiais');
-            const detalhes = document.getElementById('detalhes-filial');
-            if (grid) grid.classList.remove('hidden');
-            if (detalhes) detalhes.classList.add('hidden');
+            this.voltarParaFiliais();
         });
     }
 
@@ -479,8 +476,13 @@ updateMovementsTable() {
 
     openMovementModal() {
         const modal = document.getElementById('modal-movimentacao');
-        document.getElementById('form-movimentacao').reset();
+        const form = document.getElementById('form-movimentacao');
+        if (form) form.reset();
+        
+        this._populateProductSelect();
         this._populateFilialSelect();
+        this._setupMovementTypeListener();
+        
         modal.classList.remove('hidden');
         modal.classList.add('modal-enter');
     }
@@ -633,12 +635,16 @@ showToast(mensagem, tipo = 'success') {
       observacoes
     };
 
-    // Tratamento da filial:
+    // Tratamento do destino:
+    // - '' (Estoque TI) -> não inclui filial_id no payload (movimentação local)
+    // - 'VAN' -> filial_id = 'VAN' para identificação especial
     // - 'AGRICOPEL' -> filial_id = NULL (registramos movimento com filial_id null)
-    // - '' (Nenhum) -> não inclui filial_id no payload (movimentação local)
     // - outro -> filial_id = id
     let filial_id_payload;
-    if (selectedFilial === 'AGRICOPEL') {
+    if (selectedFilial === 'VAN') {
+      payload.filial_id = null; // Vamos usar o campo setor para identificar a Van
+      payload.setor = 'VAN'; // Força o setor como Van para identificação
+    } else if (selectedFilial === 'AGRICOPEL') {
       filial_id_payload = null;
       payload.filial_id = null;
     } else if (selectedFilial === '') {
@@ -788,26 +794,158 @@ _populateFilialSelect() {
   const select = document.getElementById('movimentacao-filial');
   if (!select) return;
 
-  // Limpa e monta opções: Agricopel primeiro, depois Nenhum, depois filiais reais
+  // Limpa e monta opções
   select.innerHTML = '';
 
   const noneOpt = document.createElement('option');
   noneOpt.value = '';
-  noneOpt.textContent = 'Nenhum (movimentação local)';
-  noneOpt.classList.add('movimentacao-produto');
+  noneOpt.textContent = 'Estoque TI (movimentação local)';
   select.appendChild(noneOpt);
 
+  // Adiciona a Van como opção especial
+  const vanOpt = document.createElement('option');
+  vanOpt.value = 'VAN';
+  vanOpt.textContent = 'Van (Estoque Móvel)';
+  select.appendChild(vanOpt);
+
+  // Agricopel com setores
+  const agricopelOpt = document.createElement('option');
+  agricopelOpt.value = 'AGRICOPEL';
+  agricopelOpt.textContent = 'Agricopel (Matriz)';
+  select.appendChild(agricopelOpt);
+
+  // Filiais reais
   (this.filiais || []).forEach(f => {
     const opt = document.createElement('option');
     opt.value = f.id;
     opt.textContent = f.nome || `Filial ${f.id}`;
-    opt.classList.add('movimentacao-produto');
     select.appendChild(opt);
   });
 }
 
+_populateProductSelect() {
+  const select = document.getElementById('movimentacao-produto');
+  if (!select) return;
 
+  select.innerHTML = '<option value="">Selecione um produto</option>';
+  
+  (this.produtos || []).forEach(produto => {
+    const opt = document.createElement('option');
+    opt.value = produto.id;
+    opt.textContent = `${produto.nome} (${produto.codigo}) - Qtd: ${produto.quantidade}`;
+    select.appendChild(opt);
+  });
+}
 
+_setupMovementTypeListener() {
+  const tipoSelect = document.getElementById('movimentacao-tipo');
+  const solicitanteDiv = document.getElementById('movimentacao-solicitante')?.parentElement;
+  const chamadoDiv = document.getElementById('movimentacao-chamado')?.parentElement;
+  const setorDiv = document.getElementById('movimentacao-setor')?.parentElement;
+  const destinoSelect = document.getElementById('movimentacao-filial');
+  
+  if (!tipoSelect) return;
+  
+  tipoSelect.addEventListener('change', (e) => {
+    const isEntrada = e.target.value === 'entrada';
+    
+    // Para entrada, esconde solicitante e chamado
+    if (solicitanteDiv) solicitanteDiv.style.display = isEntrada ? 'none' : 'block';
+    if (chamadoDiv) chamadoDiv.style.display = isEntrada ? 'none' : 'block';
+    
+    // Limpa valores quando escondidos
+    if (isEntrada) {
+      const solicitanteInput = document.getElementById('movimentacao-solicitante');
+      const chamadoInput = document.getElementById('movimentacao-chamado');
+      if (solicitanteInput) solicitanteInput.value = '';
+      if (chamadoInput) chamadoInput.value = '';
+    }
+  });
+  
+  // Listener para mudança de destino (setores)
+  if (destinoSelect) {
+    destinoSelect.addEventListener('change', (e) => {
+      this._updateSetorField(e.target.value);
+    });
+  }
+}
+
+_updateSetorField(destino) {
+  const setorInput = document.getElementById('movimentacao-setor');
+  if (!setorInput) return;
+  
+  if (destino === 'AGRICOPEL') {
+    // Converte input em select para setores da Agricopel
+    this._convertSetorToSelect([
+      'TI', 'Contabilidade', 'RH', 'Vendas', 'Compras', 
+      'Financeiro', 'Expedição', 'Almoxarifado', 'Diretoria'
+    ]);
+  } else if (destino && destino !== '' && destino !== 'VAN' && !isNaN(destino)) {
+    // Para filiais/postos, converte para select de setores
+    this._convertSetorToSelect([
+      'Administração', 'Vendas', 'Operação', 'Manutenção', 'Conveniência'
+    ]);
+  } else {
+    // Para outros casos, mantém como input text
+    this._convertSetorToInput();
+  }
+}
+
+_convertSetorToSelect(options) {
+  const setorInput = document.getElementById('movimentacao-setor');
+  const container = setorInput.parentElement;
+  
+  // Remove input atual
+  setorInput.remove();
+  
+  // Cria select
+  const select = document.createElement('select');
+  select.id = 'movimentacao-setor';
+  select.className = 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500';
+  
+  // Adiciona opções
+  const defaultOpt = document.createElement('option');
+  defaultOpt.value = '';
+  defaultOpt.textContent = 'Selecione o setor';
+  select.appendChild(defaultOpt);
+  
+  options.forEach(option => {
+    const opt = document.createElement('option');
+    opt.value = option;
+    opt.textContent = option;
+    select.appendChild(opt);
+  });
+  
+  container.appendChild(select);
+}
+
+_convertSetorToInput() {
+  const setorSelect = document.getElementById('movimentacao-setor');
+  const container = setorSelect.parentElement;
+  
+  // Se já é input, não faz nada
+  if (setorSelect.tagName === 'INPUT') return;
+  
+  // Remove select atual
+  setorSelect.remove();
+  
+  // Cria input
+  const input = document.createElement('input');
+  input.type = 'text';
+  input.id = 'movimentacao-setor';
+  input.className = 'w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500';
+  input.placeholder = 'Digite o setor';
+  
+  container.appendChild(input);
+}
+
+voltarParaFiliais() {
+  const grid = document.getElementById('grid-filiais');
+  const detalhes = document.getElementById('detalhes-filial');
+  if (grid) grid.classList.remove('hidden');
+  if (detalhes) detalhes.classList.add('hidden');
+  this.filialAtual = null; // Reset da filial atual
+}
 
 async loadFiliais() {
   try {
@@ -1231,6 +1369,11 @@ updateDashboard() {
     this.updateSaldoPorCategoria();
     this.updateProdutosZerados();
     this.updateListaSimplificada();
+    
+    // Novos cards solicitados
+    this.updateTopUsuarios();
+    this.updateTopSetores();
+    this.updateTopFiliais();
 }
 
 updateTopMovimentados() {
@@ -1343,6 +1486,85 @@ updateListaSimplificada() {
 
 
 
+
+// Adicionar funções dos novos cards na classe (antes da inicialização)
+EstoqueApp.prototype.updateTopUsuarios = function() {
+  const container = document.getElementById('top-usuarios');
+  if (!container) return;
+
+  const contagem = {};
+  this.movimentacoes.forEach(m => {
+    if (m.tipo === 'saida' && m.solicitante) {
+      contagem[m.solicitante] = (contagem[m.solicitante] || 0) + m.quantidade;
+    }
+  });
+
+  const top5 = Object.entries(contagem)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  if (top5.length === 0) {
+    container.innerHTML = '<p class="text-gray-500 text-xs">Nenhum usuário encontrado</p>';
+    return;
+  }
+
+  container.innerHTML = top5.map(([usuario, qtd]) => 
+    `<p class="text-xs">${usuario} - <span class="font-bold">${qtd}</span></p>`
+  ).join('');
+};
+
+EstoqueApp.prototype.updateTopSetores = function() {
+  const container = document.getElementById('top-setores');
+  if (!container) return;
+
+  const contagem = {};
+  this.movimentacoes.forEach(m => {
+    if (m.tipo === 'saida' && m.setor && m.setor !== 'VAN') {
+      contagem[m.setor] = (contagem[m.setor] || 0) + m.quantidade;
+    }
+  });
+
+  const top5 = Object.entries(contagem)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  if (top5.length === 0) {
+    container.innerHTML = '<p class="text-gray-500 text-xs">Nenhum setor encontrado</p>';
+    return;
+  }
+
+  container.innerHTML = top5.map(([setor, qtd]) => 
+    `<p class="text-xs">${setor} - <span class="font-bold">${qtd}</span></p>`
+  ).join('');
+};
+
+EstoqueApp.prototype.updateTopFiliais = function() {
+  const container = document.getElementById('top-filiais');
+  if (!container) return;
+
+  const contagem = {};
+  this.movimentacoes.forEach(m => {
+    if (m.tipo === 'saida' && m.filial_id) {
+      const filialNome = this.getFilialName(m.filial_id);
+      if (filialNome && filialNome !== '—') {
+        contagem[filialNome] = (contagem[filialNome] || 0) + m.quantidade;
+      }
+    }
+  });
+
+  const top5 = Object.entries(contagem)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5);
+
+  if (top5.length === 0) {
+    container.innerHTML = '<p class="text-gray-500 text-xs">Nenhuma filial encontrada</p>';
+    return;
+  }
+
+  container.innerHTML = top5.map(([filial, qtd]) => 
+    `<p class="text-xs">${filial} - <span class="font-bold">${qtd}</span></p>`
+  ).join('');
+};
 
 // Initialize the application e exponha globalmente
 const app = new EstoqueApp();
